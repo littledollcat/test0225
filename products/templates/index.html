@@ -1,0 +1,119 @@
+<html>
+
+<head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body>
+    {% block content%}
+    {% if messages %}
+    <script>
+        {% for msg in messages %}
+        alert('{{msg.message}}');
+        {% endfor %}
+    </script>
+    {% endif %}
+    <form method="POST" action="./add">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit"><i class="material-icons">add</i></button>
+    </form>
+
+    <h1>商品列表</h1>
+    <table>
+        <thead>
+            <th>ProductID</th>
+            <th>stock_pcs</th>
+            <th>price</th>
+            <th>shop_id</th>
+            <th>vip</th>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <td>{{p.id}}</td>
+                {% if p.stock_pcs < 1 %}
+                <td style="color: red;">貨源不足</td>
+                {% else %}
+                <td>{{p.stock_pcs}}</td>
+                {% endif %}
+                <td>{{p.price}}</td>
+                <td>{{p.shop_id}}</td>
+                <td>{{p.vip}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+    <h1>訂單紀錄</h1>
+    <table>
+        <thead>
+            <th>Order ID</th>
+            <th>product_id</th>
+            <th>qty</th>
+            <th>price</th>
+            <th>shop_id</th>
+            <th>CustomerID</th>
+            <th>Operations</th>
+        </thead>
+        <tbody>
+            {% for o in orders %}
+            <tr>
+                <td>{{o.id}}</td>
+                <td>{{o.product_id.id}}</td>
+                <td>{{o.qty}}</td>
+                <td>{{o.price}}</td>
+                <td>{{o.shop_id}}</td>
+                <td>{{o.CustomerID}}</td>
+                <td>
+                    <button id="delete_order" value="{{o.id}}"><i class="material-icons">remove</i></button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+    <button id="get_top">Top 3</button>
+    <div>TOP 3</div>
+    <div id="top3"></div>
+
+
+
+    {% endblock %}
+
+    <script type="text/javascript">
+        var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+        $('#delete_order').on('click', function () {
+            $.ajax({
+                url: '/order/' + $(this).val(),
+                method: 'DELETE',
+                headers: {
+                    "X-CSRFToken": csrftoken
+                },
+                success: function (response) {
+                    window.location.reload()
+                }
+                
+            });
+            return false
+        });
+        $('#get_top').on('click', function () {
+            $.ajax({
+                url: '/top/3',
+                method: 'POST',
+                success: function (response) {
+                    $('#top3').append(JSON.stringify(response))
+                },
+               
+            });
+            return false
+        });
+        console.log("{{form_error}}");
+    </script>
+</body>
+
+</html>
